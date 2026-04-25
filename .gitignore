@@ -1,0 +1,6 @@
+.claude/
+.vscode/
+backend/.venv/
+desktop/build/
+desktop/node_modules/
+frontend/node_modules/

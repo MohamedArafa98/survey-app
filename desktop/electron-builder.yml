@@ -1,0 +1,37 @@
+appId: com.surveyapp.desktop
+productName: Survey App
+copyright: Copyright © Survey App
+directories:
+  output: release
+  buildResources: build
+files:
+  - main.js
+  - preload.js
+  - package.json
+  - node_modules/**/*
+extraResources:
+  - from: ../backend
+    to: backend
+    filter:
+      - "**/*"
+      - "!.venv/**"
+      - "!**/__pycache__/**"
+      - "!**/*.pyc"
+      - "!**/*.pyo"
+      - "!**/.pytest_cache/**"
+  - from: python-runtime
+    to: python-runtime
+    filter:
+      - "**/*"
+win:
+  target:
+    - target: msi
+      arch: x64
+  artifactName: SurveyApp-${version}.${ext}
+msi:
+  oneClick: false
+  perMachine: true
+  runAfterFinish: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: Survey App

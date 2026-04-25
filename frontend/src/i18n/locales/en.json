@@ -1,0 +1,449 @@
+{
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "create": "Create",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "back": "Back",
+    "home": "Home",
+    "loading": "Loading…",
+    "allSurveys": "All surveys",
+    "none": "—",
+    "signOut": "Sign out",
+    "appName": "Survey App",
+    "update": "Update",
+    "reset": "Reset",
+    "add": "Add",
+    "optional": "optional",
+    "confirm": "Confirm"
+  },
+  "landing": {
+    "title": "Survey App",
+    "subtitle": "Choose how you want to continue",
+    "admin": "Admin",
+    "adminDesc": "Manage surveys, edit questions, build charts, and export results.",
+    "guest": "Guest",
+    "guestDesc": "Pick an open survey and answer its questions."
+  },
+  "language": {
+    "label": "Language",
+    "en": "English",
+    "ar": "العربية"
+  },
+  "auth": {
+    "login": {
+      "title": "Admin Login",
+      "subtitle": "Sign in to manage surveys.",
+      "backHome": "Back to home",
+      "username": "Username",
+      "password": "Password",
+      "signIn": "Sign in",
+      "errors": {
+        "emptyUsername": "Please enter your username",
+        "emptyPassword": "Please enter your password",
+        "failed": "Login failed"
+      }
+    },
+    "setup": {
+      "title": "Welcome to Survey App",
+      "subtitle": "Create the first admin account. This account will have the owner role.",
+      "username": "Username",
+      "password": "Password",
+      "confirmPassword": "Confirm password",
+      "createAdmin": "Create admin",
+      "success": "Welcome — admin created",
+      "errors": {
+        "usernameTooShort": "Username must be at least 3 characters",
+        "passwordTooShort": "Password must be at least 6 characters",
+        "passwordMismatch": "Passwords do not match",
+        "failed": "Setup failed"
+      }
+    }
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "surveys": "Surveys",
+    "export": "Export",
+    "admins": "Admins",
+    "settings": "Settings"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "subtitle": "Overview of your surveys.",
+    "goToSurveys": "Go to surveys",
+    "tiles": {
+      "total": "Total",
+      "open": "Open",
+      "draft": "Draft",
+      "archived": "Archived"
+    },
+    "recentSurveys": "Recent surveys",
+    "emptyState": "No surveys yet.",
+    "meta": "{{period}} · {{questions}} questions · {{responses}} responses",
+    "state": {
+      "draft": "draft",
+      "open": "open",
+      "closed": "closed",
+      "archived": "archived"
+    }
+  },
+  "surveys": {
+    "list": {
+      "title": "Surveys",
+      "subtitle": "Grouped by period. Filter, open to admin, close, or archive.",
+      "newSurvey": "New survey",
+      "filterState": "State",
+      "filterPeriod": "Period",
+      "all": "All",
+      "stateLabel": {
+        "draft": "Draft",
+        "open": "Open",
+        "closed": "Closed",
+        "archived": "Archived"
+      },
+      "noPeriod": "(no period)",
+      "surveyCount_one": "{{count}} survey",
+      "surveyCount_other": "{{count}} surveys",
+      "meta": "{{created}} · {{questions}} questions · {{responses}} responses",
+      "empty": "No surveys yet. Create the first one.",
+      "actions": {
+        "edit": "Edit",
+        "analytics": "Analytics",
+        "viewAnswers": "View last 10 answers",
+        "openForGuests": "Open for guests",
+        "close": "Close",
+        "archive": "Archive",
+        "clone": "Clone",
+        "delete": "Delete"
+      },
+      "deleteConfirm": "Delete this survey and all its responses?",
+      "toasts": {
+        "stateChanged": "Survey {{state}}",
+        "stateError": "Failed to change state",
+        "cloned": "Survey cloned",
+        "cloneError": "Clone failed",
+        "deleted": "Survey deleted",
+        "deleteError": "Delete failed"
+      }
+    },
+    "create": {
+      "title": "New survey",
+      "titleField": "Title",
+      "periodField": "Period label",
+      "periodPlaceholder": "e.g. H1 2026",
+      "descriptionField": "Description",
+      "success": "Survey created",
+      "error": "Create failed",
+      "errors": {
+        "emptyTitle": "Please enter a survey title"
+      }
+    },
+    "editor": {
+      "title": "Edit survey",
+      "warning": "This survey has {{count}} response(s). Edits to questions will be recorded with a warning to preserve analytics consistency.",
+      "viewAnalytics": "View analytics",
+      "titleField": "Title",
+      "periodField": "Period label",
+      "descriptionField": "Description",
+      "saveDetails": "Save details",
+      "questions": "Questions",
+      "questionsHint": "Drag to reorder within a category. Each question is answered on a 1–5 scale (1 worst, 5 best).",
+      "questionsCount": "{{count}} question(s)",
+      "emptyGroup": "No questions in this category yet.",
+      "addQuestionPlaceholder": "New question…",
+      "addButton": "Add",
+      "commentsLabel": "Comments",
+      "rowSave": "Save",
+      "categories": "Categories",
+      "categoriesHint": "Organize questions into groups. Categories will be used to break down analytics later.",
+      "noCategories": "No categories yet — questions will appear under \"Uncategorized\".",
+      "uncategorized": "Uncategorized",
+      "addCategoryPlaceholder": "New category…",
+      "addCategoryButton": "Add category",
+      "moveUp": "Move up",
+      "moveDown": "Move down",
+      "deleteCategoryConfirm": "Delete this category? Its questions will move to \"Uncategorized\".",
+      "editQuestionConfirm": "This survey already has responses. Editing question text may affect how analytics map historical answers. Proceed?",
+      "deleteQuestionConfirm": "Delete this question? Existing answers to it will be removed.",
+      "toasts": {
+        "detailsSaved": "Survey details saved",
+        "saveFailed": "Save failed",
+        "questionAdded": "Question added",
+        "addFailed": "Add failed",
+        "questionUpdated": "Question updated",
+        "updateFailed": "Update failed",
+        "questionDeleted": "Question deleted",
+        "deleteFailed": "Delete failed",
+        "reorderFailed": "Reorder failed",
+        "categoryAdded": "Category added",
+        "categoryUpdated": "Category updated",
+        "categoryDeleted": "Category deleted"
+      },
+      "errors": {
+        "emptyTitle": "Title cannot be empty",
+        "emptyQuestion": "Question text cannot be empty",
+        "emptyCategory": "Category name cannot be empty",
+        "crossCategoryDrag": "Use the category dropdown to move a question between categories."
+      }
+    },
+    "responses": {
+      "title": "Last 10 responses",
+      "subtitle": "The 10 most recent submissions for {{title}}.",
+      "backToSurveys": "All surveys",
+      "columns": {
+        "submitted": "Submitted",
+        "name": "Name",
+        "occupation": "Occupation",
+        "gender": "Gender",
+        "age": "Age",
+        "answers": "Answers"
+      },
+      "noComment": "No comment",
+      "anonymous": "Anonymous",
+      "empty": "No responses yet for this survey.",
+      "scoreLabel": "Score"
+    },
+    "analytics": {
+      "titlePrefix": "Analytics",
+      "savedCharts": "Saved charts",
+      "generalCharts": "General charts",
+      "generalBadge": "general",
+      "newCustomChart": "New custom chart",
+      "noData": "No data yet",
+      "emptyReasons": {
+        "no_surveys": "This chart isn't bound to any survey yet. Open it from a survey's analytics page or select surveys in Export to see data.",
+        "no_responses": "No responses have been submitted for this survey yet.",
+        "filtered_out": "Your filters excluded every response. Remove or relax the gender / occupation / age filters.",
+        "empty_groups": "The combination of X-axis and group-by produced no matching rows. Try a different dimension."
+      },
+      "defaults": {
+        "avg_per_question": "Average score per question",
+        "distribution": "Score distribution",
+        "by_gender": "By gender",
+        "by_age_bucket": "By age bucket",
+        "by_occupation": "By occupation"
+      },
+      "edited": "edited",
+      "editChart": "Edit chart",
+      "resetToDefault": "Reset to default",
+      "resetConfirm": "Reset this chart to its default configuration?",
+      "deleteConfirm": "Delete this chart?",
+      "modal": {
+        "new": "New chart",
+        "default": "Edit default chart",
+        "saved": "Edit chart"
+      },
+      "builder": {
+        "namePlaceholder": "Chart name",
+        "defaultHint": "Editing built-in chart — your changes apply to this survey only. Use Reset on the analytics card to revert.",
+        "generalHint": "This chart is general — it will appear on every survey's analytics page (rendered against that survey's data) and can be exported against any selection.",
+        "chartType": "Chart type",
+        "types": {
+          "bar": "Bar",
+          "line": "Line",
+          "pie": "Pie",
+          "radar": "Radar"
+        },
+        "metric": "Metric (Y axis)",
+        "metrics": {
+          "avg": "Average score",
+          "count": "Response count",
+          "percentage": "Percentage of responses",
+          "distribution": "Score distribution"
+        },
+        "xAxis": "X axis",
+        "xAxes": {
+          "question": "Question",
+          "category": "Category",
+          "survey": "Survey",
+          "gender": "Gender",
+          "occupation": "Occupation",
+          "age_bucket": "Age bucket",
+          "score": "Score (1–5)"
+        },
+        "groupBy": "Group by",
+        "groupByNone": "(none)"
+      },
+      "toasts": {
+        "resetDone": "{{chart}} reset to default",
+        "resetFailed": "Reset failed",
+        "chartDeleted": "Chart deleted",
+        "deleteFailed": "Delete failed",
+        "chartUpdated": "Chart updated",
+        "chartSaved": "Chart saved",
+        "saveFailed": "Save failed"
+      },
+      "errors": {
+        "emptyName": "Please enter a chart name"
+      }
+    }
+  },
+  "export": {
+    "title": "Export to Excel",
+    "subtitle": "Select surveys, content sheets, default charts, and any saved custom charts. Charts are embedded as native Excel charts (editable in Excel) backed by real data tables.",
+    "surveys": "Surveys",
+    "noSurveys": "No surveys.",
+    "responsesCountSuffix": "responses",
+    "sheetsHeader": "Sheets to include",
+    "includeAgg": "Aggregated analytics (per-question averages, response counts by demographic, and a per-question-by-demographic breakdown)",
+    "includeRaw": "Raw responses (one row per response)",
+    "includeCmp": "Multi-survey comparison (only with 2+ surveys selected)",
+    "defaultsHeader": "Default charts",
+    "defaultsHint": "Each selected default is exported once per selected survey. If you've edited a default for a particular survey, the override is used automatically.",
+    "customHeader": "Custom saved charts",
+    "customHint": "Each selected chart is written as a native Excel chart (Bar / Line / Pie / Radar) sitting next to its data table, so you can edit it inside Excel.",
+    "customEmpty": "No custom charts yet. Build one on a survey's Analytics page.",
+    "selectAll": "Select all",
+    "download": "Download Excel",
+    "toasts": {
+      "success": "Export ready — download started",
+      "error": "Export failed"
+    },
+    "errors": {
+      "selectAtLeastOne": "Please select at least one survey to export",
+      "selectAtLeastOneSheet": "Please select at least one sheet or chart to include"
+    }
+  },
+  "admins": {
+    "title": "Admins",
+    "subtitle": "Manage admin accounts. Owners can promote/demote roles and reset other admins' passwords.",
+    "newAdmin": "New admin",
+    "columns": {
+      "username": "Username",
+      "role": "Role",
+      "status": "Status",
+      "created": "Created"
+    },
+    "status": {
+      "active": "active",
+      "inactive": "inactive"
+    },
+    "deactivateConfirm": "Deactivate {{name}}?",
+    "toasts": {
+      "updated": "Admin updated",
+      "updateFailed": "Update failed",
+      "deactivated": "Admin deactivated",
+      "deactivateFailed": "Deactivate failed"
+    },
+    "create": {
+      "title": "Create admin",
+      "username": "Username",
+      "password": "Password",
+      "confirmPassword": "Confirm password",
+      "role": "Role",
+      "success": "Admin created",
+      "failed": "Failed",
+      "errors": {
+        "usernameTooShort": "Username must be at least 3 characters",
+        "passwordTooShort": "Password must be at least 6 characters",
+        "passwordMismatch": "Passwords do not match"
+      }
+    },
+    "reset": {
+      "title": "Reset password · {{name}}",
+      "newPassword": "New password",
+      "confirmPassword": "Confirm password",
+      "submit": "Reset",
+      "success": "Password reset",
+      "failed": "Failed",
+      "errors": {
+        "passwordTooShort": "Password must be at least 6 characters",
+        "passwordMismatch": "Passwords do not match"
+      }
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "subtitle": "Occupations list, age buckets, and account.",
+    "occupations": {
+      "title": "Occupations (guest dropdown)",
+      "allowOther": "Allow guests to type their own occupation (the \"Other…\" option in the dropdown)",
+      "saved": "Occupations saved",
+      "saveFailed": "Save failed",
+      "toggleFailed": "Toggle failed",
+      "toggleOnMessage": "\"Other…\" option enabled",
+      "toggleOffMessage": "\"Other…\" option disabled",
+      "errors": {
+        "empty": "Please enter at least one occupation",
+        "emptyEntry": "Occupation entries cannot be empty — fix or remove blank rows",
+        "duplicate": "Duplicate occupation: {{name}}"
+      }
+    },
+    "buckets": {
+      "title": "Age buckets (analytics)",
+      "hint": "Used to segment responses by age. Raw age is stored per response; analytics bucket it at query time.",
+      "labelPlaceholder": "label",
+      "addBucket": "Add bucket",
+      "saved": "Age buckets saved",
+      "saveFailed": "Save failed",
+      "errors": {
+        "emptyLabel": "Bucket label cannot be empty",
+        "badRange": "Bucket \"{{label}}\" — min must be ≤ max",
+        "overlap": "Buckets \"{{a}}\" and \"{{b}}\" overlap"
+      }
+    },
+    "password": {
+      "title": "Change my password",
+      "current": "Current password",
+      "new": "New password",
+      "confirm": "Confirm new password",
+      "submit": "Update",
+      "success": "Password updated",
+      "failed": "Failed",
+      "errors": {
+        "emptyCurrent": "Please enter your current password",
+        "tooShort": "New password must be at least 6 characters",
+        "mismatch": "Passwords do not match"
+      }
+    }
+  },
+  "guest": {
+    "picker": {
+      "title": "Available surveys",
+      "subtitle": "Pick a survey to answer. Your response is recorded anonymously.",
+      "meta": "{{period}} · {{questions}} questions",
+      "empty": "No surveys are open right now.",
+      "home": "Home"
+    },
+    "demographics": {
+      "title": "Before you start",
+      "subtitle": "We use this information to analyze responses. Your answers are anonymous.",
+      "occupation": "Occupation",
+      "selectPlaceholder": "-- select --",
+      "otherOption": "Other…",
+      "otherPlaceholder": "Please type your occupation",
+      "gender": "Gender",
+      "male": "Male",
+      "female": "Female",
+      "age": "Age",
+      "name": "Name",
+      "continue": "Continue to questions",
+      "errors": {
+        "occupation": "Please select or enter an occupation",
+        "gender": "Please select a gender",
+        "age": "Enter a valid age (10–110)"
+      }
+    },
+    "runner": {
+      "back": "Back",
+      "progress": "Progress",
+      "uncategorized": "Uncategorized",
+      "commentPlaceholder": "Optional comment",
+      "scoreLabels": {
+        "worst": "worst",
+        "best": "best"
+      },
+      "submit": "Submit",
+      "pending": "Answer all {{total}} questions",
+      "errors": {
+        "incomplete": "Please answer all questions before submitting"
+      }
+    },
+    "submit": {
+      "success": "Thank you — your response was recorded",
+      "error": "Failed to submit your response"
+    }
+  }
+}
