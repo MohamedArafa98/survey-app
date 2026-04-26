@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { StatePill } from "./Dashboard";
 import { Button } from "../../components/Button";
+import { ConfirmModal } from "../../components/ConfirmModal";
 
 type Survey = {
   id: number;
@@ -34,6 +35,7 @@ export default function SurveyList() {
   const [showCreate, setShowCreate] = useState(false);
   const [filterState, setFilterState] = useState<string>("");
   const [filterPeriod, setFilterPeriod] = useState<string>("");
+  const [surveyToDelete, setSurveyToDelete] = useState<Survey | null>(null);
 
   const { data: surveys = [] } = useQuery({
     queryKey: ["surveys"],
@@ -203,15 +205,23 @@ export default function SurveyList() {
                   <button
                     className="btn btn-ghost"
                     title={t("surveys.list.actions.clone")}
-                    onClick={() => clone.mutate(s.id)}
+                    onClick={(e) => {
+                      e.currentTarget.blur();
+                      e.preventDefault();
+                      e.stopPropagation();
+                      clone.mutate(s.id);
+                    }}
                   >
                     <Copy className="h-4 w-4" />
                   </button>
                   <button
                     className="btn btn-ghost text-red-600"
                     title={t("surveys.list.actions.delete")}
-                    onClick={() => {
-                      if (confirm(t("surveys.list.deleteConfirm"))) del.mutate(s.id);
+                    onClick={(e) => {
+                      e.currentTarget.blur();
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setSurveyToDelete(s);
                     }}
                   >
                     <Trash2 className="h-4 w-4" />
@@ -228,6 +238,19 @@ export default function SurveyList() {
       )}
 
       {showCreate && <CreateSurveyModal onClose={() => setShowCreate(false)} />}
+      
+      {surveyToDelete && (
+        <ConfirmModal
+          title={t("surveys.list.deleteConfirm")}
+          message={surveyToDelete.title}
+          onConfirm={() => {
+            del.mutate(surveyToDelete.id);
+            setSurveyToDelete(null);
+          }}
+          onCancel={() => setSurveyToDelete(null)}
+          pending={del.isPending}
+        />
+      )}
     </div>
   );
 }

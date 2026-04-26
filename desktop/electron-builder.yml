@@ -24,10 +24,10 @@ extraResources:
     filter:
       - "**/*"
 win:
+  sign: null
   target:
-    - target: msi
+    - target: dir
       arch: x64
-  artifactName: SurveyApp-${version}.${ext}
 msi:
   oneClick: false
   perMachine: true

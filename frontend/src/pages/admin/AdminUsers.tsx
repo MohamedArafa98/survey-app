@@ -6,6 +6,7 @@ import { UserPlus, Trash2, KeyRound } from "lucide-react";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { Button } from "../../components/Button";
+import { ConfirmModal } from "../../components/ConfirmModal";
 
 type Admin = {
   id: number;
@@ -26,6 +27,7 @@ export default function AdminUsers() {
 
   const [showCreate, setShowCreate] = useState(false);
   const [resetting, setResetting] = useState<Admin | null>(null);
+  const [deactivating, setDeactivating] = useState<Admin | null>(null);
 
   const patch = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: Partial<Admin> }) =>
@@ -127,6 +129,19 @@ export default function AdminUsers() {
 
       {showCreate && <CreateAdminModal onClose={() => setShowCreate(false)} />}
       {resetting && <ResetPasswordModal admin={resetting} onClose={() => setResetting(null)} />}
+      
+      {deactivating && (
+        <ConfirmModal
+          title={t("admins.deactivateConfirm", { name: deactivating.username })}
+          message={t("admins.deactivateWarning")}
+          onConfirm={() => {
+            del.mutate(deactivating.id);
+            setDeactivating(null);
+          }}
+          onCancel={() => setDeactivating(null)}
+          pending={del.isPending}
+        />
+      )}
     </div>
   );
 }

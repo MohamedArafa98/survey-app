@@ -26,6 +26,20 @@ A comprehensive local desktop application for managing and conducting surveys, f
 3. **Running in Dev**:
    - Start the integrated dev environment from the `desktop/` directory: `npm run dev` (starts backend, frontend, and Electron).
 
+### Deployment (Windows)
+To build the application as a standalone folder on Windows, use the provided build script. This script performs a manual assembly of the Electron distribution folder to bypass environment-specific issues with `electron-builder` toolset extraction (such as symbolic link privilege errors).
+
+1. Run the build script from the root directory:
+   ```powershell
+   powershell.exe -ExecutionPolicy Bypass -File .\installer\build.ps1
+   ```
+2. The output will be located in `installer/SurveyApp`. This folder is ready for distribution and contains the "Survey App.exe".
+
+### Recent Fixes
+- **Charts**: Added `lazyUpdate={true}` to `ReactECharts` in `SurveyAnalytics.tsx` to prevent rendering artifacts during data refresh.
+- **Input Sync**: Improved state synchronization in `SurveyEditor.tsx`'s `QuestionRow` to ensure inputs maintain focus and correct values when the question list is modified (cloned/deleted).
+- **Question Cloning**: Added a dedicated clone button for individual questions in the survey editor.
+
 ### Authentication
 - **Admin**: Password-protected. The first account created becomes the `owner`.
 - **Guest**: Open access for survey respondents.

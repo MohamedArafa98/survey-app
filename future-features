@@ -1,0 +1,6 @@
+1. Automatic Backup System: Since the database is local
+    SQLite, adding a "Export Backup" button in Settings that
+    a timestamped copy of data.db would help
+    prevent data loss.
+
+2. improve dev tool and the chart maker tool

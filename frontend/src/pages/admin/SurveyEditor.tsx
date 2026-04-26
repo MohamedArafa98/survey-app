@@ -12,10 +12,11 @@ import {
 } from "@dnd-kit/core";
 import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { ArrowDown, ArrowUp, GripVertical, Pencil, Plus, Save, Trash2, X } from "lucide-react";
+import { ArrowDown, ArrowUp, Copy, GripVertical, Pencil, Plus, Save, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { Button } from "../../components/Button";
+import { ConfirmModal } from "../../components/ConfirmModal";
 
 type Category = {
   id: number;
@@ -59,13 +60,18 @@ export default function SurveyEditor() {
   const [description, setDescription] = useState("");
   const [questions, setQuestions] = useState<Question[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [loadedSid, setLoadedSid] = useState<number | null>(null);
+
+  const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
+  const [questionToDelete, setQuestionToDelete] = useState<Question | null>(null);
+  const [questionToEdit, setQuestionToEdit] = useState<Question | null>(null);
 
   useEffect(() => {
     if (survey) {
-      setTitle(survey.title);
-      setPeriod(survey.period_label);
-      setDescription(survey.description);
-      setQuestions(survey.questions);
+      setTitle(survey.title || "");
+      setPeriod(survey.period_label || "");
+      setDescription(survey.description || "");
+      setQuestions(survey.questions || []);
       setCategories(survey.categories || []);
     }
   }, [survey]);
@@ -75,6 +81,7 @@ export default function SurveyEditor() {
       (await api.patch(`/surveys/${sid}`, { title: title.trim(), period_label: period, description })).data,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["survey", sid] });
+      qc.invalidateQueries({ queryKey: ["surveys"] });
       toast.success(t("surveys.editor.toasts.detailsSaved"));
     },
     onError: (e: any) => toast.error(e?.response?.data?.detail || t("surveys.editor.toasts.saveFailed")),
@@ -189,7 +196,8 @@ export default function SurveyEditor() {
       return;
     }
     if (survey && survey.response_count > 0) {
-      if (!confirm(t("surveys.editor.editQuestionConfirm"))) return;
+      setQuestionToEdit(q);
+      return;
     }
     patchQ.mutate(q);
   }
@@ -286,11 +294,7 @@ export default function SurveyEditor() {
               isFirst={i === 0}
               isLast={i === categories.length - 1}
               onRename={(name) => patchCategory.mutate({ ...c, name })}
-              onDelete={() => {
-                if (confirm(t("surveys.editor.deleteCategoryConfirm"))) {
-                  delCategory.mutate(c.id);
-                }
-              }}
+              onDelete={() => setCategoryToDelete(c)}
               onMoveUp={() => moveCategory(c.id, -1)}
               onMoveDown={() => moveCategory(c.id, 1)}
             />
@@ -349,12 +353,11 @@ export default function SurveyEditor() {
                             key={q.id}
                             q={q}
                             categories={categories}
-                            onSave={handleEditQuestion}
-                            onDelete={() => {
-                              if (confirm(t("surveys.editor.deleteQuestionConfirm"))) {
-                                delQ.mutate(q.id);
-                              }
+                            onUpdate={handleEditQuestion}
+                            onClone={() => {
+                              createQ.mutate({ text: `${q.text} (${t("surveys.list.actions.clone")})`, category_id: q.category_id });
                             }}
+                            onDelete={() => setQuestionToDelete(q)}
                           />
                         ))}
                       </ul>
@@ -401,6 +404,44 @@ export default function SurveyEditor() {
           </button>
         </form>
       </div>
+
+      {categoryToDelete && (
+        <ConfirmModal
+          title={t("surveys.editor.deleteCategoryConfirm")}
+          message={categoryToDelete.name}
+          onConfirm={() => {
+            delCategory.mutate(categoryToDelete.id);
+            setCategoryToDelete(null);
+          }}
+          onCancel={() => setCategoryToDelete(null)}
+          pending={delCategory.isPending}
+        />
+      )}
+      {questionToDelete && (
+        <ConfirmModal
+          title={t("surveys.editor.deleteQuestionConfirm")}
+          message={questionToDelete.text}
+          onConfirm={() => {
+            delQ.mutate(questionToDelete.id);
+            setQuestionToDelete(null);
+          }}
+          onCancel={() => setQuestionToDelete(null)}
+          pending={delQ.isPending}
+        />
+      )}
+      {questionToEdit && (
+        <ConfirmModal
+          title={t("surveys.editor.editQuestionConfirm")}
+          message={questionToEdit.text}
+          variant="primary"
+          onConfirm={() => {
+            patchQ.mutate(questionToEdit);
+            setQuestionToEdit(null);
+          }}
+          onCancel={() => setQuestionToEdit(null)}
+          pending={patchQ.isPending}
+        />
+      )}
     </div>
   );
 }
@@ -496,7 +537,15 @@ function CategoryRow({
           <button className="btn btn-ghost" onClick={() => setEditing(true)} title={t("common.edit")}>
             <Pencil className="h-4 w-4" />
           </button>
-          <button className="btn btn-ghost text-red-600" onClick={onDelete} title={t("common.delete")}>
+          <button
+            className="btn btn-ghost text-red-600"
+            onClick={(e) => {
+              e.currentTarget.blur();
+              e.stopPropagation();
+              onDelete();
+            }}
+            title={t("common.delete")}
+          >
             <Trash2 className="h-4 w-4" />
           </button>
         </>
@@ -508,12 +557,14 @@ function CategoryRow({
 function QuestionRow({
   q,
   categories,
-  onSave,
+  onUpdate,
+  onClone,
   onDelete,
 }: {
   q: Question;
   categories: Category[];
-  onSave: (q: Question) => void;
+  onUpdate: (q: Question) => void;
+  onClone: () => void;
   onDelete: () => void;
 }) {
   const { t } = useTranslation();
@@ -558,17 +609,44 @@ function QuestionRow({
         <input type="checkbox" checked={allowComment} onChange={(e) => setAllowComment(e.target.checked)} />
         {t("surveys.editor.commentsLabel")}
       </label>
-      <button
-        className="btn btn-ghost"
-        onClick={() =>
-          onSave({ ...q, text, allow_comment: allowComment, category_id: categoryId })
-        }
-      >
-        {t("surveys.editor.rowSave")}
-      </button>
-      <button className="btn btn-ghost text-red-600" onClick={onDelete}>
-        <Trash2 className="h-4 w-4" />
-      </button>
+      <div className="flex items-center gap-1">
+        <button
+          className="btn btn-ghost"
+          title={t("surveys.editor.rowSave")}
+          onClick={(e) => {
+            e.currentTarget.blur();
+            e.preventDefault();
+            e.stopPropagation();
+            onUpdate({ ...q, text, allow_comment: allowComment, category_id: categoryId });
+          }}
+        >
+          <Save className="h-4 w-4" />
+        </button>
+        <button
+          className="btn btn-ghost"
+          title={t("surveys.list.actions.clone")}
+          onClick={(e) => {
+            e.currentTarget.blur();
+            e.preventDefault();
+            e.stopPropagation();
+            onClone();
+          }}
+        >
+          <Copy className="h-4 w-4" />
+        </button>
+        <button
+          className="btn btn-ghost text-red-600"
+          title={t("common.delete")}
+          onClick={(e) => {
+            e.currentTarget.blur();
+            e.preventDefault();
+            e.stopPropagation();
+            onDelete();
+          }}
+        >
+          <Trash2 className="h-4 w-4" />
+        </button>
+      </div>
     </li>
   );
 }

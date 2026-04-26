@@ -67,7 +67,7 @@ export default function SurveyRunner() {
     },
   });
 
-  if (!form || form.survey_id !== sid) {
+  if (!submit.isPending && !submit.isSuccess && !submit.isError && (!form || form.survey_id !== sid)) {
     return <Navigate to={`/guest/${sid}/info`} replace />;
   }
   if (isLoading || !survey) return <div className="p-6 text-slate-500">{t("common.loading")}</div>;

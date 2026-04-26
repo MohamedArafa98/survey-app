@@ -8,6 +8,7 @@ import { Pencil, RotateCcw, Save, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { Button } from "../../components/Button";
+import { ConfirmModal } from "../../components/ConfirmModal";
 
 /* ---------- types ---------- */
 
@@ -30,6 +31,7 @@ export type ChartConfig = {
   type: "bar" | "line" | "pie" | "radar";
   metric: "avg" | "count" | "percentage" | "distribution";
   x_axis: "question" | "survey" | "gender" | "occupation" | "age_bucket" | "score" | "category";
+  default_key?: string | null;
   group_by?:
     | "gender"
     | "occupation"
@@ -97,10 +99,10 @@ export default function SurveyAnalytics() {
   });
 
   const surveyCharts = charts.filter(
-    (c) => c.survey_id === sid && !c.name.startsWith(DEFAULT_NAME_PREFIX),
+    (c) => c.survey_id === sid && !(c.config_json as any)?.default_key && !c.name.startsWith(DEFAULT_NAME_PREFIX),
   );
   const generalCharts = charts.filter(
-    (c) => c.survey_id === null && !c.name.startsWith(DEFAULT_NAME_PREFIX),
+    (c) => c.survey_id === null && !(c.config_json as any)?.default_key && !c.name.startsWith(DEFAULT_NAME_PREFIX),
   );
 
   if (!survey) return <div className="text-slate-500">{t("common.loading")}</div>;
@@ -124,8 +126,11 @@ export default function SurveyAnalytics() {
             defaultKey={k}
             surveyId={sid}
             override={
-              charts.find((c) => c.survey_id === sid && c.name === DEFAULT_NAME_PREFIX + k) ||
-              null
+              charts.find(
+                (c) =>
+                  c.survey_id === sid &&
+                  ((c.config_json as any)?.default_key === k || c.name === DEFAULT_NAME_PREFIX + k),
+              ) || null
             }
           />
         ))}
@@ -172,9 +177,11 @@ function DefaultChartCard({
   const { t } = useTranslation();
   const qc = useQueryClient();
   const [editing, setEditing] = useState(false);
+  const [resetting, setResetting] = useState(false);
 
   const def = DEFAULT_CHARTS[defaultKey];
   const title = t(`surveys.analytics.defaults.${defaultKey}`);
+  const displayName = override?.name || title;
   const config = override?.config_json || def.config;
 
   const { data } = useQuery({
@@ -202,7 +209,7 @@ function DefaultChartCard({
     <div className="card p-5">
       <div className="flex items-center justify-between mb-3">
         <h3 className="font-semibold">
-          {title}
+          {displayName}
           {override && (
             <span className="ms-2 badge bg-brand-50 text-brand-700">
               {t("surveys.analytics.edited")}
@@ -217,36 +224,49 @@ function DefaultChartCard({
           >
             <Pencil className="h-4 w-4" />
           </button>
-          {override && (
-            <button
-              className="btn btn-ghost"
-              title={t("surveys.analytics.resetToDefault")}
-              onClick={() => {
-                if (confirm(t("surveys.analytics.resetConfirm"))) reset.mutate();
-              }}
-              disabled={reset.isPending}
-            >
-              <RotateCcw className="h-4 w-4" />
-            </button>
-          )}
+          <button
+            className="btn btn-ghost"
+            title={t("surveys.analytics.resetToDefault")}
+            onClick={(e) => {
+              e.currentTarget.blur();
+              e.stopPropagation();
+              setResetting(true);
+            }}
+            disabled={!override || reset.isPending}
+          >
+            <RotateCcw className="h-4 w-4" />
+          </button>
         </div>
       </div>
 
       <div className="h-[320px]">
         {option ? (
-          <ReactECharts option={option} style={{ height: "100%" }} notMerge />
+          <ReactECharts option={option} style={{ height: "100%" }} notMerge lazyUpdate={true} />
         ) : (
           <EmptyExplanation reason={data?.reason} />
         )}
       </div>
+
+      {resetting && (
+        <ConfirmModal
+          title={t("surveys.analytics.resetConfirm")}
+          message={title}
+          onConfirm={() => {
+            reset.mutate();
+            setResetting(false);
+          }}
+          onCancel={() => setResetting(false)}
+          pending={reset.isPending}
+        />
+      )}
 
       {editing && (
         <EditChartModal
           surveyId={surveyId}
           initial={{
             id: override?.id,
-            name: override?.name || DEFAULT_NAME_PREFIX + defaultKey,
-            config,
+            name: override?.name || title,
+            config: override?.config_json || { ...def.config, default_key: defaultKey },
             kind: "default",
           }}
           onClose={() => setEditing(false)}
@@ -262,6 +282,7 @@ function SavedChartCard({ chart, surveyId }: { chart: SavedChart; surveyId: numb
   const { t } = useTranslation();
   const qc = useQueryClient();
   const [editing, setEditing] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const previewSurveyIds = chart.survey_id ? [chart.survey_id] : [surveyId];
 
@@ -308,8 +329,10 @@ function SavedChartCard({ chart, surveyId }: { chart: SavedChart; surveyId: numb
           </button>
           <button
             className="btn btn-ghost text-red-600"
-            onClick={() => {
-              if (confirm(t("surveys.analytics.deleteConfirm"))) del.mutate();
+            onClick={(e) => {
+              e.currentTarget.blur();
+              e.stopPropagation();
+              setDeleting(true);
             }}
             disabled={del.isPending}
             title={t("common.delete")}
@@ -325,6 +348,19 @@ function SavedChartCard({ chart, surveyId }: { chart: SavedChart; surveyId: numb
           <EmptyExplanation reason={data?.reason} />
         )}
       </div>
+
+      {deleting && (
+        <ConfirmModal
+          title={t("surveys.analytics.deleteConfirm")}
+          message={chart.name}
+          onConfirm={() => {
+            del.mutate();
+            setDeleting(false);
+          }}
+          onCancel={() => setDeleting(false)}
+          pending={del.isPending}
+        />
+      )}
 
       {editing && (
         <EditChartModal
@@ -431,7 +467,7 @@ function ChartBuilder({
       const body = {
         name: name.trim(),
         survey_id: initial.kind === "default" ? surveyId : null,
-        config_json: cfg,
+        config_json: { ...cfg, default_key: initial.kind === "default" ? initial.config.default_key : undefined },
       };
       if (initial.id) {
         return (await api.patch(`/charts/${initial.id}`, body)).data;
@@ -536,7 +572,7 @@ function ChartBuilder({
 
       <div className="h-[420px]">
         {option ? (
-          <ReactECharts option={option} style={{ height: "100%" }} notMerge />
+          <ReactECharts option={option} style={{ height: "100%" }} notMerge lazyUpdate={true} />
         ) : (
           <EmptyExplanation reason={data?.reason} />
         )}
@@ -633,3 +669,4 @@ export function buildOption(cfg: ChartConfig, data: any): EChartsOption | null {
     series: series as any,
   };
 }
+

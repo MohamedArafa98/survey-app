@@ -5,3 +5,4 @@ desktop/build/
 desktop/node_modules/
 frontend/node_modules/
 .env
+installer/SurveyApp

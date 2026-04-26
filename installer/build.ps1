@@ -1,45 +1,67 @@
-# Build pipeline: frontend -> copy static -> embeddable Python -> Electron MSI
+# Manual Build Pipeline: frontend -> copy static -> embeddable Python -> Manual Electron Folder Assembly
 #
-# Prerequisites:
-#   - Node.js 20+ / npm 10+
-#   - PowerShell 7 (pwsh)
-#   - Internet access (first run downloads Python embeddable + pip deps)
-#
-# Usage:   pwsh .\installer\build.ps1
+# This avoids electron-builder's winCodeSign issues by manually assembling the distribution folder.
 
-$ErrorActionPreference = 'Stop'
-$ROOT = Split-Path -Parent $PSScriptRoot
-Write-Host "== Survey App build ==" -ForegroundColor Cyan
-Write-Host "Root: $ROOT"
+$ErrorActionPreference = "Stop"
+$ROOT = Get-Location
 
-# 1. Frontend build
-Write-Host "`n[1/4] Building frontend..." -ForegroundColor Yellow
+Write-Host "== Survey App Manual Build ==" -ForegroundColor Cyan
+Write-Host "Root: $ROOT`n"
+
+# 1. Build React frontend
+Write-Host "[1/4] Building frontend..." -ForegroundColor Yellow
 Push-Location "$ROOT\frontend"
 if (-not (Test-Path node_modules)) { npm install }
 npm run build
 Pop-Location
 
-# 2. Copy React build into backend static dir (served by FastAPI).
-Write-Host "`n[2/4] Copying frontend build to backend/app/static..." -ForegroundColor Yellow
-$static = "$ROOT\backend\app\static"
-if (Test-Path $static) { Remove-Item -Recurse -Force $static }
-New-Item -ItemType Directory -Path $static | Out-Null
-Copy-Item -Recurse "$ROOT\frontend\dist\*" $static
+# 2. Copy static files to backend
+Write-Host "`n[2/4] Copying frontend build to backend\app\static..." -ForegroundColor Yellow
+$StaticDir = "$ROOT\backend\app\static"
+if (Test-Path $StaticDir) { Remove-Item -Recurse -Force $StaticDir }
+New-Item -ItemType Directory -Path $StaticDir | Out-Null
+Copy-Item -Recurse -Force "$ROOT\frontend\dist\*" $StaticDir
 
-# 3. Prepare embeddable Python runtime (idempotent).
+# 3. Prepare embeddable Python runtime
 Write-Host "`n[3/4] Preparing embeddable Python runtime..." -ForegroundColor Yellow
-pwsh "$ROOT\desktop\scripts\fetch-python.ps1"
+powershell.exe "$ROOT\desktop\scripts\fetch-python.ps1"
 
-# 4. Package with electron-builder.
-Write-Host "`n[4/4] Packaging Electron app + MSI..." -ForegroundColor Yellow
-Push-Location "$ROOT\desktop"
-if (-not (Test-Path node_modules)) { npm install }
-npm run dist
-Pop-Location
+# 4. Manually assemble the application folder
+Write-Host "`n[4/4] Assembling application folder..." -ForegroundColor Yellow
+$target = "$ROOT\installer\SurveyApp"
+if (Test-Path $target) { Remove-Item -Recurse -Force $target }
+New-Item -ItemType Directory -Path $target | Out-Null
 
-# Promote the artifact to a stable path for downstream consumers.
-$built = Get-ChildItem "$ROOT\desktop\release\*.msi" | Select-Object -First 1
-if (-not $built) { Write-Error "electron-builder produced no MSI in desktop\release" }
-$target = "$ROOT\installer\SurveyApp.msi"
-Copy-Item -Force $built.FullName $target
+# Copy Electron binaries (pre-installed in desktop/node_modules/electron/dist)
+$electronDist = "$ROOT\desktop\node_modules\electron\dist"
+if (-not (Test-Path $electronDist)) {
+    Write-Host "Installing electron dependencies..."
+    Push-Location "$ROOT\desktop"
+    npm install
+    Pop-Location
+}
+Copy-Item -Recurse -Force "$electronDist\*" $target
+
+# Rename electron.exe to "Survey App.exe"
+Rename-Item "$target\electron.exe" "Survey App.exe"
+
+# Prepare resources folder
+$resTarget = "$target\resources"
+# Copy our app files into resources/app (unpacked format)
+$appTarget = "$resTarget\app"
+New-Item -ItemType Directory -Path $appTarget | Out-Null
+Copy-Item "$ROOT\desktop\main.js" $appTarget
+Copy-Item "$ROOT\desktop\preload.js" $appTarget
+Copy-Item "$ROOT\desktop\package.json" $appTarget
+Copy-Item -Recurse -Force "$ROOT\desktop\node_modules" $appTarget
+
+# Copy extra resources (backend and python-runtime)
+Copy-Item -Recurse -Force "$ROOT\backend" "$resTarget\backend"
+# Remove virtual environment from the copy to save space
+if (Test-Path "$resTarget\backend\.venv") { Remove-Item -Recurse -Force "$resTarget\backend\.venv" }
+# Remove pycache
+Get-ChildItem -Path "$resTarget\backend" -Include "__pycache__" -Recurse | Remove-Item -Recurse -Force
+
+Copy-Item -Recurse -Force "$ROOT\desktop\python-runtime" "$resTarget\python-runtime"
+
 Write-Host "`nBuild complete: $target" -ForegroundColor Green
