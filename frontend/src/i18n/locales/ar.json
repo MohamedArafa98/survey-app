@@ -223,7 +223,10 @@
         "distribution": "توزيع النتائج",
         "by_gender": "حسب الجنس",
         "by_age_bucket": "حسب الفئة العمرية",
-        "by_occupation": "حسب المهنة"
+        "by_occupation": "حسب المهنة",
+        "gender_distribution": "توزيع الجنس",
+        "occupation_distribution": "توزيع المهنة",
+        "age_bucket_distribution": "توزيع الفئات العمرية"
       },
       "edited": "معدّل",
       "editChart": "تعديل الرسم",

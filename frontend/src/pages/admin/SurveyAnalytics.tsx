@@ -53,7 +53,10 @@ export type DefaultKey =
   | "distribution"
   | "by_gender"
   | "by_age_bucket"
-  | "by_occupation";
+  | "by_occupation"
+  | "gender_distribution"
+  | "occupation_distribution"
+  | "age_bucket_distribution";
 
 export const DEFAULT_NAME_PREFIX = "__default.";
 
@@ -77,6 +80,18 @@ export const DEFAULT_CHARTS: Record<DefaultKey, { title: string; config: ChartCo
   by_occupation: {
     title: "By occupation",
     config: { type: "bar", metric: "avg", x_axis: "occupation", group_by: null },
+  },
+  gender_distribution: {
+    title: "Gender distribution",
+    config: { type: "pie", metric: "count", x_axis: "gender", group_by: null },
+  },
+  occupation_distribution: {
+    title: "Occupation distribution",
+    config: { type: "pie", metric: "count", x_axis: "occupation", group_by: null },
+  },
+  age_bucket_distribution: {
+    title: "Age bucket distribution",
+    config: { type: "pie", metric: "count", x_axis: "age_bucket", group_by: null },
   },
 };
 

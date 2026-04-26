@@ -223,7 +223,10 @@
         "distribution": "Score distribution",
         "by_gender": "By gender",
         "by_age_bucket": "By age bucket",
-        "by_occupation": "By occupation"
+        "by_occupation": "By occupation",
+        "gender_distribution": "Gender distribution",
+        "occupation_distribution": "Occupation distribution",
+        "age_bucket_distribution": "Age bucket distribution"
       },
       "edited": "edited",
       "editChart": "Edit chart",
