@@ -6,6 +6,7 @@ from typing import Any
 import pandas as pd
 from openpyxl import Workbook
 from openpyxl.chart import BarChart, LineChart, PieChart, RadarChart, Reference
+from openpyxl.chart.label import DataLabelList
 from openpyxl.styles import Alignment, Font, PatternFill
 from openpyxl.utils import get_column_letter
 from sqlalchemy import select
@@ -131,9 +132,91 @@ def _build_native_chart(chart_type: str, title: str, data_rows: int, data_cols: 
     )
     chart.add_data(values_ref, titles_from_data=True)
     chart.set_categories(cats_ref)
+    chart.x_axis.delete = False
+    chart.y_axis.delete = False
     chart.height = 10
     chart.width = 20
     return chart
+
+
+def _build_occupation_chart(title: str, data_rows: int, ws, data_start_row: int):
+    """Specific helper for the occupation breakdown table.
+    Table: Category | Question | 5 | 4 | 3 | 2 | 1
+    Questions are in column 2, Values are in columns 3..7
+    """
+    chart = BarChart()
+    chart.type = "col"
+    chart.grouping = "clustered"
+    chart.title = title
+    chart.style = 10
+    chart.dLbls = DataLabelList(showVal=True)
+    chart.x_axis.delete = False
+    chart.y_axis.delete = False
+
+    # Data: columns 3 to 7 (scores 5 down to 1)
+    values_ref = Reference(
+        ws,
+        min_col=3,
+        max_col=7,
+        min_row=data_start_row,
+        max_row=data_start_row + data_rows
+    )
+    # X axis labels: column 2 (Question text)
+    cats_ref = Reference(
+        ws,
+        min_col=2,
+        max_col=2,
+        min_row=data_start_row + 1,
+        max_row=data_start_row + data_rows
+    )
+    chart.add_data(values_ref, titles_from_data=True)
+    chart.set_categories(cats_ref)
+
+    # Standard Likert colors: 5=Green, 4=Lime, 3=Yellow, 2=Orange, 1=Red
+    # Series index in Excel starts from 0. Our cols are 5, 4, 3, 2, 1.
+    colors = ["22c55e", "84cc16", "eab308", "f97316", "ef4444"]
+    for i, color in enumerate(colors):
+        if i < len(chart.series):
+            chart.series[i].graphicalProperties.solidFill = color
+
+    chart.height = 10
+    chart.width = 20
+    return chart
+
+
+def _occupation_breakdown_to_table(points: list[dict], survey: models.Survey) -> pd.DataFrame:
+    """Matrix: [Category, Question, 5, 4, 3, 2, 1]"""
+    if not points:
+        return pd.DataFrame()
+
+    matrix = {}
+    for p in points:
+        q_text = str(p.get("series") or "Unknown")
+        score = str(p["x"])
+        if q_text not in matrix:
+            matrix[q_text] = {"5": 0, "4": 0, "3": 0, "2": 0, "1": 0}
+        matrix[q_text][score] = int(p["y"])
+
+    cat_map = {c.id: c.name for c in survey.categories}
+    rows = []
+    for q in survey.questions:
+        if q.text not in matrix:
+            continue
+        rows.append({
+            "Category": cat_map.get(q.category_id, "Uncategorized"),
+            "Question": q.text,
+            "5": matrix[q.text]["5"],
+            "4": matrix[q.text]["4"],
+            "3": matrix[q.text]["3"],
+            "2": matrix[q.text]["2"],
+            "1": matrix[q.text]["1"],
+        })
+
+    df = pd.DataFrame(rows)
+    if not df.empty:
+        # Sort by category then question
+        df = df.sort_values(["Category", "Question"])
+    return df
 
 
 # ---------- main entry ----------
@@ -219,6 +302,46 @@ def build_workbook(db: Session, req: schemas.ExportIn) -> bytes:
             1,
             "Average score per question across selected surveys",
         )
+
+    if req.include_occupation_breakdown:
+        ws = wb.create_sheet("Occupation Breakdown")
+        row = 1
+        for s in surveys:
+            # Get list of occupations for this survey
+            occ_df = aggregations.demographic_breakdown(db, s.id, "occupation")
+            if occ_df.empty:
+                continue
+            
+            occupations = occ_df["occupation"].tolist()
+            for occ in occupations:
+                ws.cell(row=row, column=1, value=f"[{s.title}] Occupation: {occ}").font = Font(bold=True, size=13)
+                row += 1
+
+                # Run query for this occupation: metric=count, group_by=question, x_axis=score
+                query = schemas.AnalyticsQueryIn(
+                    survey_ids=[s.id],
+                    metric="count",
+                    x_axis="score",
+                    group_by="question",
+                    filters=schemas.AnalyticsFilter(occupation=[occ])
+                )
+                result = aggregations.run_analytics(db, query)
+                points = [p.model_dump() for p in result.points]
+                
+                table = _occupation_breakdown_to_table(points, s)
+                if table.empty:
+                    ws.cell(row=row, column=1, value="(no data)")
+                    row += 2
+                    continue
+                
+                data_start_row = row
+                row = _write_df(ws, table, start_row=row)
+                data_rows = len(table)
+                
+                chart = _build_occupation_chart(f"{occ} - Score Distribution", data_rows, ws, data_start_row)
+                anchor = f"{get_column_letter(10)}{data_start_row}"
+                ws.add_chart(chart, anchor)
+                row = max(row, data_start_row + 20)
 
     if req.charts:
         ws = wb.create_sheet("Charts")

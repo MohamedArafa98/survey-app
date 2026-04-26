@@ -16,7 +16,8 @@ type Survey = {
   id: number;
   title: string;
   period_label: string;
-  questions: { id: number; text: string }[];
+  questions: { id: number; text: string; category_id: number | null; order_index: number }[];
+  categories: { id: number; name: string; order_index: number }[];
 };
 
 type SavedChart = {
@@ -113,6 +114,11 @@ export default function SurveyAnalytics() {
     queryFn: async () => (await api.get<SavedChart[]>("/charts")).data,
   });
 
+  const { data: summary } = useQuery({
+    queryKey: ["survey-summary", sid],
+    queryFn: async () => (await api.get<any>(`/analytics/surveys/${sid}/summary`)).data,
+  });
+
   const surveyCharts = charts.filter(
     (c) => c.survey_id === sid && !(c.config_json as any)?.default_key && !c.name.startsWith(DEFAULT_NAME_PREFIX),
   );
@@ -121,6 +127,8 @@ export default function SurveyAnalytics() {
   );
 
   if (!survey) return <div className="text-slate-500">{t("common.loading")}</div>;
+
+  const occupations = (summary?.by_occupation || []).map((o: any) => o.occupation) as string[];
 
   return (
     <div className="space-y-6">
@@ -170,6 +178,17 @@ export default function SurveyAnalytics() {
           <div className="grid lg:grid-cols-2 gap-6">
             {generalCharts.map((c) => (
               <SavedChartCard key={c.id} chart={c} surveyId={sid} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {occupations.length > 0 && (
+        <div className="space-y-4 mt-8 pt-8 border-t">
+          <h2 className="text-lg font-semibold">Breakdown by Occupation</h2>
+          <div className="space-y-8">
+            {occupations.map((occ) => (
+              <OccupationBreakdown key={occ} survey={survey} occupation={occ} />
             ))}
           </div>
         </div>
@@ -684,4 +703,126 @@ export function buildOption(cfg: ChartConfig, data: any): EChartsOption | null {
     series: series as any,
   };
 }
+
+/* ---------- Occupation Breakdown Component ---------- */
+
+function OccupationBreakdown({ survey, occupation }: { survey: Survey; occupation: string }) {
+  const { t } = useTranslation();
+  
+  const { data, isLoading } = useQuery({
+    queryKey: ["analytics-query", survey.id, "occupation-breakdown", occupation],
+    queryFn: async () =>
+      (
+        await api.post("/analytics/query", {
+          survey_ids: [survey.id],
+          type: "bar",
+          metric: "count",
+          x_axis: "score",
+          group_by: "question",
+          filters: { occupation: [occupation] },
+        })
+      ).data,
+  });
+
+  if (isLoading) return <div className="text-sm text-slate-500">{t("common.loading")}</div>;
+  if (!data || !data.points || data.points.length === 0) return null;
+
+  // Process data: points have { x: score, y: count, series: question text }
+  const matrix: Record<string, Record<string, number>> = {};
+  data.points.forEach((p: any) => {
+    const qText = p.series || "Unknown";
+    const score = p.x;
+    if (!matrix[qText]) matrix[qText] = { "5": 0, "4": 0, "3": 0, "2": 0, "1": 0 };
+    matrix[qText][score] = p.y;
+  });
+
+  const categoriesMap = new Map(survey.categories.map(c => [c.id, c.name]));
+  
+  const tableRows = survey.questions
+    .map(q => {
+      const counts = matrix[q.text] || { "5": 0, "4": 0, "3": 0, "2": 0, "1": 0 };
+      const categoryName = q.category_id ? categoriesMap.get(q.category_id) || "Uncategorized" : "Uncategorized";
+      return {
+        question: q.text,
+        category: categoryName,
+        counts
+      };
+    })
+    .filter(row => matrix[row.question]); // only include questions that have data for this occupation
+
+  // Sort by category name, then question text
+  tableRows.sort((a, b) => {
+    if (a.category !== b.category) return a.category.localeCompare(b.category);
+    return a.question.localeCompare(b.question);
+  });
+
+  const chartOption: EChartsOption = {
+    tooltip: { trigger: "axis", axisPointer: { type: "shadow" } },
+    legend: { bottom: 0 },
+    grid: { left: 10, right: 30, bottom: 40, top: 10, containLabel: true },
+    xAxis: { type: "value" },
+    yAxis: { 
+      type: "category", 
+      data: tableRows.map(r => r.question).reverse(), // Reverse to show first question at the top
+      axisLabel: { width: 200, overflow: 'truncate' } 
+    },
+    series: ["1", "2", "3", "4", "5"].map(score => ({
+      name: score,
+      type: "bar",
+      stack: "total",
+      label: { show: true, formatter: (params: any) => params.value > 0 ? params.value : '' },
+      emphasis: { focus: "series" },
+      data: tableRows.map(r => r.counts[score]).reverse(),
+      itemStyle: {
+        color: score === "1" ? "#ef4444" : // red
+               score === "2" ? "#f97316" : // orange
+               score === "3" ? "#eab308" : // yellow
+               score === "4" ? "#84cc16" : // lime
+               "#22c55e" // green
+      }
+    })),
+  };
+
+  return (
+    <div className="card overflow-hidden">
+      <div className="bg-slate-50 border-b px-6 py-4 flex justify-between items-center">
+        <h3 className="font-semibold text-lg text-slate-800">{occupation}</h3>
+      </div>
+      
+      <div className="p-6 overflow-x-auto">
+        <table className="w-full text-sm text-left text-slate-600">
+          <thead className="text-xs text-slate-500 uppercase bg-slate-50 border-b">
+            <tr>
+              <th className="px-4 py-3 font-semibold w-1/4">Category</th>
+              <th className="px-4 py-3 font-semibold w-2/4">Question</th>
+              <th className="px-4 py-3 font-semibold text-center w-16">5</th>
+              <th className="px-4 py-3 font-semibold text-center w-16">4</th>
+              <th className="px-4 py-3 font-semibold text-center w-16">3</th>
+              <th className="px-4 py-3 font-semibold text-center w-16">2</th>
+              <th className="px-4 py-3 font-semibold text-center w-16">1</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y">
+            {tableRows.map((row, i) => (
+              <tr key={i} className="hover:bg-slate-50">
+                <td className="px-4 py-3 font-medium text-slate-700">{row.category}</td>
+                <td className="px-4 py-3">{row.question}</td>
+                <td className="px-4 py-3 text-center">{row.counts["5"]}</td>
+                <td className="px-4 py-3 text-center">{row.counts["4"]}</td>
+                <td className="px-4 py-3 text-center">{row.counts["3"]}</td>
+                <td className="px-4 py-3 text-center">{row.counts["2"]}</td>
+                <td className="px-4 py-3 text-center">{row.counts["1"]}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="px-6 pb-6 h-[400px]">
+        <ReactECharts option={chartOption} style={{ height: "100%" }} />
+      </div>
+    </div>
+  );
+}
+
 

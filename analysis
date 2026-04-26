@@ -1,0 +1,7 @@
+i want now more new charts for occupation , each category in occupation will have its own table and its own chart
+ , the table should be questions verticaly and the answers horizontaly which means for example cat1 will be on A2
+  and the questions will be on B2 , and the answers will be from 5 to 1 . mark 5 will be C2 and mark 4 will be on 
+  D2 and the same for the rest. in C2 cell which is should be under mark 5 , i want here to get how many people 
+  from this occupation category gave 5 to this question. for example 
+question 1 is answered by 10 doctors , i want to see how many doctors give 5 to this question and how many doctors give 4 to this question and how many doctors give 3 to this question and how many doctors give 2 to this question and how many doctors give 1 to this question. then create a bar chart based on this table . every category in occupation should have a different table and chart so if we have for example doctor and nurse only , you will create two tables with two charts , but if we have 5 categories you will create 5 tables with 5 charts.
+feel free to ask me any questions 

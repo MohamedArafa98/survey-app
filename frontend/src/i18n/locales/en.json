@@ -292,6 +292,7 @@
     "sheetsHeader": "Sheets to include",
     "includeAgg": "Aggregated analytics (per-question averages, response counts by demographic, and a per-question-by-demographic breakdown)",
     "includeRaw": "Raw responses (one row per response)",
+    "includeOcc": "Occupation breakdown (per-occupation score distribution tables and charts)",
     "includeCmp": "Multi-survey comparison (only with 2+ surveys selected)",
     "defaultsHeader": "Default charts",
     "defaultsHint": "Each selected default is exported once per selected survey. If you've edited a default for a particular survey, the override is used automatically.",

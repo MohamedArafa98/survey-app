@@ -44,6 +44,7 @@ export default function ExportPage() {
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [includeRaw, setIncludeRaw] = useState(true);
   const [includeAgg, setIncludeAgg] = useState(true);
+  const [includeOcc, setIncludeOcc] = useState(true);
   const [includeCmp, setIncludeCmp] = useState(true);
   const [chartsSelected, setChartsSelected] = useState<Set<number>>(new Set());
   const [defaultsSelected, setDefaultsSelected] = useState<Set<DefaultKey>>(new Set());
@@ -102,6 +103,7 @@ export default function ExportPage() {
           include_raw: includeRaw,
           include_aggregates: includeAgg,
           include_comparison: includeCmp,
+          include_occupation_breakdown: includeOcc,
           charts: [...defaultPayload, ...customPayload],
         },
         { responseType: "blob" },
@@ -175,6 +177,10 @@ export default function ExportPage() {
         <label className="flex items-center gap-2 text-sm mt-2">
           <input type="checkbox" checked={includeRaw} onChange={(e) => setIncludeRaw(e.target.checked)} />
           {t("export.includeRaw")}
+        </label>
+        <label className="flex items-center gap-2 text-sm mt-2">
+          <input type="checkbox" checked={includeOcc} onChange={(e) => setIncludeOcc(e.target.checked)} />
+          {t("export.includeOcc")}
         </label>
         <label className="flex items-center gap-2 text-sm mt-2">
           <input type="checkbox" checked={includeCmp} onChange={(e) => setIncludeCmp(e.target.checked)} />

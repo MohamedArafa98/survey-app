@@ -271,6 +271,7 @@ class ExportIn(BaseModel):
     include_raw: bool = True
     include_aggregates: bool = True
     include_comparison: bool = True
+    include_occupation_breakdown: bool = False
     charts: list[ChartExportIn] = []
 
 
