@@ -9,6 +9,7 @@ import {
   Settings as SettingsIcon,
   FileText,
   Users,
+  Trash2,
 } from "lucide-react";
 import { cn } from "../../lib/cn";
 import { useTranslation } from "react-i18next";
@@ -26,6 +27,7 @@ export default function AdminLayout() {
     { to: "/admin/export", label: t("nav.export"), icon: Download, end: false },
     { to: "/admin/users", label: t("nav.admins"), icon: Users, end: false },
     { to: "/admin/settings", label: t("nav.settings"), icon: SettingsIcon, end: false },
+    { to: "/admin/trash", label: t("nav.trash", "Recycle Bin"), icon: Trash2, end: false },
   ];
 
   async function logout() {

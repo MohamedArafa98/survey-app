@@ -65,6 +65,7 @@ class Survey(Base):
     cloned_from_id: Mapped[Optional[int]] = mapped_column(
         ForeignKey("survey.id", ondelete="SET NULL"), nullable=True
     )
+    is_deleted: Mapped[bool] = mapped_column(Boolean, default=False, server_default="0")
 
     questions: Mapped[list["Question"]] = relationship(
         back_populates="survey",
@@ -157,6 +158,7 @@ class ChartDef(Base):
     name: Mapped[str] = mapped_column(String(128))
     config_json: Mapped[dict] = mapped_column(JSON)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    is_deleted: Mapped[bool] = mapped_column(Boolean, default=False, server_default="0")
 
 
 Index("ix_answer_response_question", Answer.response_id, Answer.question_id)

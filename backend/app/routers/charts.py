@@ -8,17 +8,17 @@ from .. import models, schemas
 from ..db import get_db
 from ..deps import current_admin
 
-
 router = APIRouter(prefix="/charts", tags=["charts"])
-
 
 @router.get("", response_model=list[schemas.ChartDefOut])
 def list_charts(
     survey_id: int | None = None,
+    deleted: bool = False,
     db: Session = Depends(get_db),
     _: models.AdminUser = Depends(current_admin),
 ):
     stmt = select(models.ChartDef).order_by(models.ChartDef.created_at.desc())
+    stmt = stmt.where(models.ChartDef.is_deleted == deleted)
     if survey_id is not None:
         stmt = stmt.where(models.ChartDef.survey_id == survey_id)
     return db.scalars(stmt).all()
@@ -30,7 +30,11 @@ def create_chart(
     db: Session = Depends(get_db),
     _: models.AdminUser = Depends(current_admin),
 ):
-    c = models.ChartDef(name=body.name, survey_id=body.survey_id, config_json=body.config_json)
+    c = models.ChartDef(
+        name=body.name,
+        survey_id=body.survey_id,
+        config_json=body.config_json,
+    )
     db.add(c)
     db.commit()
     db.refresh(c)
@@ -38,14 +42,14 @@ def create_chart(
 
 
 @router.patch("/{chart_id}", response_model=schemas.ChartDefOut)
-def patch_chart(
+def update_chart(
     chart_id: int,
     body: schemas.ChartDefIn,
     db: Session = Depends(get_db),
     _: models.AdminUser = Depends(current_admin),
 ):
     c = db.get(models.ChartDef, chart_id)
-    if not c:
+    if not c or c.is_deleted:
         raise HTTPException(404, "Not found")
     c.name = body.name
     c.survey_id = body.survey_id
@@ -58,12 +62,30 @@ def patch_chart(
 @router.delete("/{chart_id}")
 def delete_chart(
     chart_id: int,
+    hard: bool = False,
     db: Session = Depends(get_db),
     _: models.AdminUser = Depends(current_admin),
 ):
     c = db.get(models.ChartDef, chart_id)
     if not c:
         raise HTTPException(404, "Not found")
-    db.delete(c)
+    if hard:
+        db.delete(c)
+    else:
+        c.is_deleted = True
+    db.commit()
+    return {"ok": True}
+
+
+@router.post("/{chart_id}/restore")
+def restore_chart(
+    chart_id: int,
+    db: Session = Depends(get_db),
+    _: models.AdminUser = Depends(current_admin),
+):
+    c = db.get(models.ChartDef, chart_id)
+    if not c:
+        raise HTTPException(404, "Not found")
+    c.is_deleted = False
     db.commit()
     return {"ok": True}

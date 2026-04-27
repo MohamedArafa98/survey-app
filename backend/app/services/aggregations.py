@@ -119,29 +119,33 @@ def run_analytics(db: Session, q: schemas.AnalyticsQueryIn) -> schemas.Analytics
 
     grp = df.groupby(by, dropna=False)
 
-    if q.metric == "avg":
-        agg = grp["score"].mean().round(3)
-    elif q.metric == "marks_percentage":
-        # Sum of scores / (n * 5) * 100
-        agg = (grp["score"].sum() / (grp["score"].count() * 5) * 100).round(2)
-    elif q.metric == "count":
-        agg = grp["response_id"].nunique()
-    elif q.metric == "percentage":
-        total = df["response_id"].nunique() or 1
-        agg = (grp["response_id"].nunique() / total * 100).round(2)
-    elif q.metric == "distribution":
-        # count of each score (1..5) within group
-        agg = grp["score"].value_counts().unstack(fill_value=0).stack()
-    else:
-        agg = grp["score"].mean()
+    def _compute(metric, grouping):
+        if metric == "avg":
+            return grouping["score"].mean().round(3)
+        elif metric == "marks_percentage":
+            return (grouping["score"].sum() / (grouping["score"].count() * 5) * 100).round(2)
+        elif metric == "count":
+            return grouping["response_id"].nunique()
+        elif metric == "percentage":
+            total = df["response_id"].nunique() or 1
+            return (grouping["response_id"].nunique() / total * 100).round(2)
+        elif metric == "distribution":
+            return grouping["score"].value_counts().unstack(fill_value=0).stack()
+        else:
+            return grouping["score"].mean()
+
+    agg = _compute(q.metric, grp)
+    agg2 = _compute(q.secondary_metric, grp) if q.secondary_metric else None
 
     points: list[schemas.AnalyticsPoint] = []
     if group_col and group_col != x_col:
         for (x_val, s_val), y in agg.items():
-            points.append(schemas.AnalyticsPoint(x=str(x_val), y=float(y), series=str(s_val)))
+            y2 = float(agg2[(x_val, s_val)]) if agg2 is not None and (x_val, s_val) in agg2 else None
+            points.append(schemas.AnalyticsPoint(x=str(x_val), y=float(y), y2=y2, series=str(s_val)))
     else:
         for x_val, y in agg.items():
-            points.append(schemas.AnalyticsPoint(x=str(x_val), y=float(y)))
+            y2 = float(agg2[x_val]) if agg2 is not None and x_val in agg2 else None
+            points.append(schemas.AnalyticsPoint(x=str(x_val), y=float(y), y2=y2))
 
     if not points:
         return schemas.AnalyticsOut(points=[], series_names=[], x_labels=[], reason="empty_groups")

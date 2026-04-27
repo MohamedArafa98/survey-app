@@ -133,6 +133,7 @@ class SurveyOut(ORMModel):
     opened_at: Optional[datetime]
     closed_at: Optional[datetime]
     cloned_from_id: Optional[int]
+    is_deleted: bool = False
     question_count: int = 0
     response_count: int = 0
 
@@ -194,6 +195,7 @@ class AnalyticsFilter(BaseModel):
 class AnalyticsQueryIn(BaseModel):
     survey_ids: list[int]
     metric: Literal["avg", "count", "percentage", "distribution", "marks_percentage"] = "avg"
+    secondary_metric: Optional[Literal["avg", "count", "percentage", "distribution", "marks_percentage"]] = None
     default_key: Optional[str] = None
     x_axis: Literal[
         "question", "survey", "gender", "occupation", "age_bucket", "score", "category"
@@ -209,6 +211,7 @@ class AnalyticsQueryIn(BaseModel):
 class AnalyticsPoint(BaseModel):
     x: str | int
     y: float | int
+    y2: Optional[float | int] = None
     series: Optional[str] = None
 
 

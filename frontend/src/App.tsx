@@ -13,6 +13,7 @@ import SurveyResponses from "./pages/admin/SurveyResponses";
 import ExportPage from "./pages/admin/ExportPage";
 import AdminUsers from "./pages/admin/AdminUsers";
 import Settings from "./pages/admin/Settings";
+import RecycleBin from "./pages/admin/RecycleBin";
 import SurveyPicker from "./pages/guest/SurveyPicker";
 import DemographicsForm from "./pages/guest/DemographicsForm";
 import SurveyRunner from "./pages/guest/SurveyRunner";
@@ -72,6 +73,7 @@ export default function App() {
         <Route path="export" element={<ExportPage />} />
         <Route path="users" element={<AdminUsers />} />
         <Route path="settings" element={<Settings />} />
+        <Route path="trash" element={<RecycleBin />} />
       </Route>
 
       <Route path="/guest" element={<SurveyPicker />} />

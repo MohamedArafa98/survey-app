@@ -32,6 +32,7 @@ def _hydrate(db: Session, s: models.Survey) -> dict:
         "opened_at": s.opened_at,
         "closed_at": s.closed_at,
         "cloned_from_id": s.cloned_from_id,
+        "is_deleted": s.is_deleted,
         "question_count": qcount,
         "response_count": rcount,
     }
@@ -41,10 +42,12 @@ def _hydrate(db: Session, s: models.Survey) -> dict:
 def list_surveys(
     state: Optional[str] = Query(default=None),
     period: Optional[str] = Query(default=None),
+    deleted: bool = Query(default=False),
     db: Session = Depends(get_db),
     _: models.AdminUser = Depends(current_admin),
 ):
     stmt = select(models.Survey).order_by(models.Survey.created_at.desc())
+    stmt = stmt.where(models.Survey.is_deleted == deleted)
     if state:
         stmt = stmt.where(models.Survey.state == state)
     if period:
@@ -73,7 +76,7 @@ def get_survey(
     _: models.AdminUser = Depends(current_admin),
 ):
     s = db.get(models.Survey, survey_id)
-    if not s:
+    if not s or s.is_deleted:
         raise HTTPException(404, "Not found")
     base = _hydrate(db, s)
     base["questions"] = s.questions
@@ -89,7 +92,7 @@ def patch_survey(
     _: models.AdminUser = Depends(current_admin),
 ):
     s = db.get(models.Survey, survey_id)
-    if not s:
+    if not s or s.is_deleted:
         raise HTTPException(404, "Not found")
     if body.title is not None:
         s.title = body.title
@@ -105,13 +108,31 @@ def patch_survey(
 @router.delete("/{survey_id}")
 def delete_survey(
     survey_id: int,
+    hard: bool = Query(default=False),
     db: Session = Depends(get_db),
     _: models.AdminUser = Depends(current_admin),
 ):
     s = db.get(models.Survey, survey_id)
     if not s:
         raise HTTPException(404, "Not found")
-    db.delete(s)
+    if hard:
+        db.delete(s)
+    else:
+        s.is_deleted = True
+    db.commit()
+    return {"ok": True}
+
+
+@router.post("/{survey_id}/restore")
+def restore_survey(
+    survey_id: int,
+    db: Session = Depends(get_db),
+    _: models.AdminUser = Depends(current_admin),
+):
+    s = db.get(models.Survey, survey_id)
+    if not s:
+        raise HTTPException(404, "Not found")
+    s.is_deleted = False
     db.commit()
     return {"ok": True}
 

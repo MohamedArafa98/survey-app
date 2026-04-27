@@ -82,3 +82,18 @@ def ensure_schema_upgrades(eng: Engine = engine) -> None:
                         "ON question (category_id)"
                     )
                 )
+        if "survey" in tables:
+            cols = {
+                row[1]
+                for row in conn.execute(text("PRAGMA table_info(survey)")).all()
+            }
+            if "is_deleted" not in cols:
+                conn.execute(text("ALTER TABLE survey ADD COLUMN is_deleted BOOLEAN DEFAULT 0"))
+        
+        if "chart_def" in tables:
+            cols = {
+                row[1]
+                for row in conn.execute(text("PRAGMA table_info(chart_def)")).all()
+            }
+            if "is_deleted" not in cols:
+                conn.execute(text("ALTER TABLE chart_def ADD COLUMN is_deleted BOOLEAN DEFAULT 0"))
