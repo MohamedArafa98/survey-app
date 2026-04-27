@@ -193,7 +193,8 @@ class AnalyticsFilter(BaseModel):
 
 class AnalyticsQueryIn(BaseModel):
     survey_ids: list[int]
-    metric: Literal["avg", "count", "percentage", "distribution"] = "avg"
+    metric: Literal["avg", "count", "percentage", "distribution", "marks_percentage"] = "avg"
+    default_key: Optional[str] = None
     x_axis: Literal[
         "question", "survey", "gender", "occupation", "age_bucket", "score", "category"
     ] = "question"

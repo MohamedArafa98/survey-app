@@ -30,7 +30,7 @@ type SavedChart = {
 
 export type ChartConfig = {
   type: "bar" | "line" | "pie" | "radar";
-  metric: "avg" | "count" | "percentage" | "distribution";
+  metric: "avg" | "count" | "percentage" | "distribution" | "marks_percentage";
   x_axis: "question" | "survey" | "gender" | "occupation" | "age_bucket" | "score" | "category";
   default_key?: string | null;
   group_by?:
@@ -51,6 +51,7 @@ export type ChartConfig = {
 
 export type DefaultKey =
   | "avg_per_question"
+  | "marks_percentage_per_question"
   | "distribution"
   | "by_gender"
   | "by_age_bucket"
@@ -65,6 +66,10 @@ export const DEFAULT_CHARTS: Record<DefaultKey, { title: string; config: ChartCo
   avg_per_question: {
     title: "Average score per question",
     config: { type: "bar", metric: "avg", x_axis: "question", group_by: null },
+  },
+  marks_percentage_per_question: {
+    title: "Total marks per question (%)",
+    config: { type: "bar", metric: "marks_percentage", x_axis: "question", group_by: null },
   },
   distribution: {
     title: "Score distribution",

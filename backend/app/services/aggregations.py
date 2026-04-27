@@ -121,6 +121,9 @@ def run_analytics(db: Session, q: schemas.AnalyticsQueryIn) -> schemas.Analytics
 
     if q.metric == "avg":
         agg = grp["score"].mean().round(3)
+    elif q.metric == "marks_percentage":
+        # Sum of scores / (n * 5) * 100
+        agg = (grp["score"].sum() / (grp["score"].count() * 5) * 100).round(2)
     elif q.metric == "count":
         agg = grp["response_id"].nunique()
     elif q.metric == "percentage":

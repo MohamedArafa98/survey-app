@@ -86,12 +86,14 @@ export default function ExportPage() {
         const surveyTitle = surveys.find((s) => s.id === sid)?.title || `Survey ${sid}`;
         for (const key of defaultsSelected) {
           const override = allCharts.find(
-            (c) => c.survey_id === sid && c.name === DEFAULT_NAME_PREFIX + key,
+            (c) =>
+              c.survey_id === sid &&
+              ((c.config_json as any)?.default_key === key || c.name === DEFAULT_NAME_PREFIX + key),
           );
           defaultPayload.push({
             name: `${surveyTitle} — ${DEFAULT_CHARTS[key].title}`,
             survey_ids: [sid],
-            config_json: override?.config_json || DEFAULT_CHARTS[key].config,
+            config_json: override?.config_json || { ...DEFAULT_CHARTS[key].config, default_key: key },
           });
         }
       }

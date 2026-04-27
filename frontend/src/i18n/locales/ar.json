@@ -226,7 +226,8 @@
         "by_occupation": "حسب المهنة",
         "gender_distribution": "توزيع الجنس",
         "occupation_distribution": "توزيع المهنة",
-        "age_bucket_distribution": "توزيع الفئات العمرية"
+        "age_bucket_distribution": "توزيع الفئات العمرية",
+        "marks_percentage_per_question": "إجمالي الدرجات لكل سؤال (%)"
       },
       "edited": "معدّل",
       "editChart": "تعديل الرسم",
@@ -254,7 +255,8 @@
           "avg": "متوسط النتيجة",
           "count": "عدد الردود",
           "percentage": "نسبة الردود",
-          "distribution": "توزيع النتائج"
+          "distribution": "توزيع النتائج",
+          "marks_percentage": "إجمالي الدرجات (%)"
         },
         "xAxis": "المحور السيني",
         "xAxes": {

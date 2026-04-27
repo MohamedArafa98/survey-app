@@ -132,8 +132,12 @@ def _build_native_chart(chart_type: str, title: str, data_rows: int, data_cols: 
     )
     chart.add_data(values_ref, titles_from_data=True)
     chart.set_categories(cats_ref)
-    chart.x_axis.delete = False
-    chart.y_axis.delete = False
+    
+    if hasattr(chart, "x_axis") and chart.x_axis is not None:
+        chart.x_axis.delete = False
+    if hasattr(chart, "y_axis") and chart.y_axis is not None:
+        chart.y_axis.delete = False
+        
     chart.height = 10
     chart.width = 20
     return chart

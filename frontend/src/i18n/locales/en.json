@@ -226,7 +226,8 @@
         "by_occupation": "By occupation",
         "gender_distribution": "Gender distribution",
         "occupation_distribution": "Occupation distribution",
-        "age_bucket_distribution": "Age bucket distribution"
+        "age_bucket_distribution": "Age bucket distribution",
+        "marks_percentage_per_question": "Total marks per question (%)"
       },
       "edited": "edited",
       "editChart": "Edit chart",
@@ -254,7 +255,8 @@
           "avg": "Average score",
           "count": "Response count",
           "percentage": "Percentage of responses",
-          "distribution": "Score distribution"
+          "distribution": "Score distribution",
+          "marks_percentage": "Total marks (%)"
         },
         "xAxis": "X axis",
         "xAxes": {
