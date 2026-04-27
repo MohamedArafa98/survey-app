@@ -52,6 +52,7 @@ export type ChartConfig = {
 export type DefaultKey =
   | "avg_per_question"
   | "marks_percentage_per_question"
+  | "marks_percentage_per_category"
   | "distribution"
   | "by_gender"
   | "by_age_bucket"
@@ -70,6 +71,10 @@ export const DEFAULT_CHARTS: Record<DefaultKey, { title: string; config: ChartCo
   marks_percentage_per_question: {
     title: "Total marks per question (%)",
     config: { type: "bar", metric: "marks_percentage", x_axis: "question", group_by: null },
+  },
+  marks_percentage_per_category: {
+    title: "Total marks per category (%)",
+    config: { type: "bar", metric: "marks_percentage", x_axis: "category", group_by: null },
   },
   distribution: {
     title: "Score distribution",

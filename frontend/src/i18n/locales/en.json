@@ -227,7 +227,8 @@
         "gender_distribution": "Gender distribution",
         "occupation_distribution": "Occupation distribution",
         "age_bucket_distribution": "Age bucket distribution",
-        "marks_percentage_per_question": "Total marks per question (%)"
+        "marks_percentage_per_question": "Total marks per question (%)",
+        "marks_percentage_per_category": "Total marks per category (%)"
       },
       "edited": "edited",
       "editChart": "Edit chart",

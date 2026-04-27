@@ -227,7 +227,8 @@
         "gender_distribution": "توزيع الجنس",
         "occupation_distribution": "توزيع المهنة",
         "age_bucket_distribution": "توزيع الفئات العمرية",
-        "marks_percentage_per_question": "إجمالي الدرجات لكل سؤال (%)"
+        "marks_percentage_per_question": "إجمالي الدرجات لكل سؤال (%)",
+        "marks_percentage_per_category": "إجمالي الدرجات لكل فئة (%)"
       },
       "edited": "معدّل",
       "editChart": "تعديل الرسم",
