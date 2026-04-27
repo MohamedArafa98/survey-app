@@ -3,4 +3,13 @@
     a timestamped copy of data.db would help
     prevent data loss.
 
-2. improve dev tool and the chart maker tool
+2. improve the chart maker to add more option to the user to create customized chart or add a new dev tool with more powerful options
+
+3. add option to remove the default chart 
+
+4. add recycle bin option to recover and restore the charts and the surveys
+
+5. check for UI enhancments 
+
+6. check for bugs
+

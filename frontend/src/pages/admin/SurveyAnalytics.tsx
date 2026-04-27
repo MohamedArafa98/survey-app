@@ -769,20 +769,19 @@ function OccupationBreakdown({ survey, occupation }: { survey: Survey; occupatio
   const chartOption: EChartsOption = {
     tooltip: { trigger: "axis", axisPointer: { type: "shadow" } },
     legend: { bottom: 0 },
-    grid: { left: 10, right: 30, bottom: 40, top: 10, containLabel: true },
-    xAxis: { type: "value" },
-    yAxis: { 
+    grid: { left: 10, right: 10, bottom: 40, top: 20, containLabel: true },
+    xAxis: { 
       type: "category", 
-      data: tableRows.map(r => r.question).reverse(), // Reverse to show first question at the top
-      axisLabel: { width: 200, overflow: 'truncate' } 
+      data: tableRows.map(r => r.question), 
+      axisLabel: { width: 100, overflow: 'truncate', rotate: 30 } 
     },
+    yAxis: { type: "value" },
     series: ["1", "2", "3", "4", "5"].map(score => ({
       name: score,
       type: "bar",
-      stack: "total",
-      label: { show: true, formatter: (params: any) => params.value > 0 ? params.value : '' },
+      label: { show: true, position: 'top', formatter: (params: any) => params.value > 0 ? params.value : '' },
       emphasis: { focus: "series" },
-      data: tableRows.map(r => r.counts[score]).reverse(),
+      data: tableRows.map(r => r.counts[score]),
       itemStyle: {
         color: score === "1" ? "#ef4444" : // red
                score === "2" ? "#f97316" : // orange
