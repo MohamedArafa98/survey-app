@@ -223,6 +223,86 @@ def _occupation_breakdown_to_table(points: list[dict], survey: models.Survey) ->
     return df
 
 
+CAT_COLORS = [
+    "DDEBF7",  # Light Blue
+    "E2EFDA",  # Light Green
+    "FFF2CC",  # Light Yellow
+    "FCE4D6",  # Light Orange
+    "D9E1F2",  # Light Indigo
+    "E7E6E6",  # Light Gray
+    "F2F2F2",  # Lighter Gray
+]
+
+
+def _write_raw_responses_ws(ws, df: pd.DataFrame, col_metadata: list[dict[str, Any]]):
+    """Specific writer for the Raw Responses sheet with category headers."""
+    if df.empty:
+        ws.cell(row=1, column=1, value="(no data)")
+        return
+
+    # 1. Prepare colors mapping
+    unique_categories = []
+    for m in col_metadata:
+        cat = m["category"]
+        if cat not in unique_categories:
+            unique_categories.append(cat)
+    
+    cat_fills = {}
+    for i, cat in enumerate(unique_categories):
+        color = CAT_COLORS[i % len(CAT_COLORS)]
+        cat_fills[cat] = PatternFill("solid", fgColor=color)
+
+    # 2. Write Category Header (Row 1)
+    for c, m in enumerate(col_metadata, start=1):
+        cell = ws.cell(row=1, column=c, value=m["category"])
+        cell.fill = cat_fills.get(m["category"], HEADER_FILL)
+        cell.font = Font(bold=True)
+        cell.alignment = Alignment(horizontal="center", vertical="center")
+
+    # 3. Merge Category Cells
+    if col_metadata:
+        start_col = 1
+        current_cat = col_metadata[0]["category"]
+        for c, m in enumerate(col_metadata[1:], start=2):
+            if m["category"] != current_cat:
+                if (c - 1) > start_col:
+                    ws.merge_cells(start_row=1, start_column=start_col, end_row=1, end_column=c - 1)
+                start_col = c
+                current_cat = m["category"]
+        # Final merge
+        if len(col_metadata) > start_col:
+            ws.merge_cells(start_row=1, start_column=start_col, end_row=1, end_column=len(col_metadata))
+
+    # 4. Write Question Header (Row 2)
+    for c, m in enumerate(col_metadata, start=1):
+        cell = ws.cell(row=2, column=c, value=m["name"])
+        cell.fill = cat_fills.get(m["category"], HEADER_FILL)
+        cell.font = Font(bold=True)
+        cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+
+    # 5. Write Data (starting Row 3)
+    for r_idx, (_, rec) in enumerate(df.iterrows(), start=3):
+        for c_idx, m in enumerate(col_metadata, start=1):
+            v = rec[m["id"]]
+            if hasattr(v, "to_pydatetime"):
+                v = v.to_pydatetime()
+            ws.cell(row=r_idx, column=c_idx, value=None if pd.isna(v) else v)
+
+    # 6. Auto-width columns and freeze panes
+    ws.freeze_panes = "A3"
+    for c, m in enumerate(col_metadata, start=1):
+        col_letter = get_column_letter(c)
+        if len(df):
+            # Sample first few rows for width
+            sample_vals = df[m["id"]].head(20).tolist()
+            lens = [len(str(v)) for v in sample_vals if not pd.isna(v)]
+            lens.append(len(str(m["name"])))
+            max_len = max(lens) if lens else 12
+        else:
+            max_len = len(str(m["name"]))
+        ws.column_dimensions[col_letter].width = max(10, min(50, max_len + 2))
+
+
 # ---------- main entry ----------
 
 def build_workbook(db: Session, req: schemas.ExportIn) -> bytes:
@@ -296,7 +376,8 @@ def build_workbook(db: Session, req: schemas.ExportIn) -> bytes:
         for s in surveys:
             name = f"Raw - {s.title}"[:31] or "Raw"
             ws = wb.create_sheet(name)
-            _write_df(ws, aggregations.raw_responses_df(db, s.id))
+            df, meta = aggregations.raw_responses_df(db, s.id)
+            _write_raw_responses_ws(ws, df, meta)
 
     if req.include_comparison and len(req.survey_ids) > 1:
         ws = wb.create_sheet("Comparison")

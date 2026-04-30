@@ -246,29 +246,75 @@ def category_avg_scores(db: Session, survey_id: int) -> pd.DataFrame:
     return g
 
 
-def raw_responses_df(db: Session, survey_id: int) -> pd.DataFrame:
-    """Wide frame: one row per response, one column per question (score + comment)."""
+def raw_responses_df(db: Session, survey_id: int) -> tuple[pd.DataFrame, list[dict[str, Any]]]:
+    """Wide frame: one row per response, one column per question (score + comment).
+    Returns (df, col_metadata) where col_metadata is a list of {id, name, category}.
+    """
     df = load_responses_df(db, [survey_id])
     if df.empty:
-        return pd.DataFrame()
+        return pd.DataFrame(), []
+
+    # Get survey questions in order to define column layout
+    survey = db.get(models.Survey, survey_id)
+    if not survey:
+        return pd.DataFrame(), []
+    
+    questions = sorted(survey.questions, key=lambda q: q.order_index)
+    cat_map = {c.id: c.name for c in survey.categories}
+
     meta_cols = ["response_id", "survey_title", "survey_period", "submitted_at",
                  "occupation", "gender", "age", "name"]
     meta = df.drop_duplicates("response_id")[meta_cols].set_index("response_id")
 
-    scores = df.pivot_table(
+    # Column definitions for questions
+    col_metadata = []
+    # Add meta columns to metadata first
+    for col in meta_cols:
+        col_metadata.append({"id": col, "name": col, "category": "Respondent Info"})
+
+    # Pivot scores and comments
+    scores_pivot = df.pivot_table(
         index="response_id",
         columns="question_text",
         values="score",
         aggfunc="first",
     ).add_prefix("Q: ")
-    comments = df.pivot_table(
+    
+    comments_pivot = df.pivot_table(
         index="response_id",
         columns="question_text",
         values="comment",
         aggfunc="first",
     ).add_prefix("Comment: ")
-    wide = meta.join(scores).join(comments).reset_index(drop=True)
-    return wide
+    
+    wide_full = meta.join(scores_pivot, how="left").join(comments_pivot, how="left").reset_index()
+
+    # Interleave Score and Comment according to survey order
+    final_cols = list(meta_cols)
+    for q in questions:
+        score_col = f"Q: {q.text}"
+        if score_col in wide_full.columns:
+            final_cols.append(score_col)
+            col_metadata.append({
+                "id": score_col,
+                "name": score_col,
+                "category": cat_map.get(q.category_id, "Uncategorized"),
+            })
+            
+            # If the question allows comments, check if we have a comment column
+            if q.allow_comment:
+                comment_col = f"Comment: {q.text}"
+                if comment_col in wide_full.columns:
+                    final_cols.append(comment_col)
+                    col_metadata.append({
+                        "id": comment_col,
+                        "name": comment_col,
+                        "category": cat_map.get(q.category_id, "Uncategorized"),
+                    })
+
+    # Filter to only existing columns and reorder
+    final_df = wide_full[final_cols].reset_index(drop=True)
+    return final_df, col_metadata
 
 
 def comparison_across_surveys(db: Session, survey_ids: list[int]) -> pd.DataFrame:
